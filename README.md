@@ -1,54 +1,74 @@
-# Express Server Architecture and Database Integration
+# Express Server
 
-This project is a basic Express server built with TypeScript. So far, the server has been set up with HTTP routes, request body parsing, and a PostgreSQL database connection using the `pg` package.
+This project is a TypeScript-based Express server connected to a PostgreSQL database. It provides basic user CRUD APIs and automatically creates the `users` table when the server starts.
 
-## What Has Been Done So Far
+## Project Summary
 
-- Created a TypeScript-based Express server in `src/server.ts`.
-- Imported and configured Express.
-- Added middleware to parse request bodies:
-  - JSON request bodies
-  - plain text request bodies
-  - URL-encoded form request bodies
-- Created a `GET /` route that returns `Hello World!`.
-- Created a `POST /` route that accepts `name` and `age` from the request body and returns a JSON response.
-- Added a PostgreSQL connection setup using `Pool` from the `pg` package.
-- Configured TypeScript output to compile from `src` into `dist`.
-- Added npm scripts for building, starting, and running the server in development mode.
+The following work has been done in this project:
 
-## Packages Used
+- Set up an Express server using TypeScript.
+- Configured middleware for JSON, text, and URL-encoded request bodies.
+- Added environment variable support using `dotenv`.
+- Created a centralized config file in `src/config/index.ts`.
+- Connected the server to PostgreSQL using the `pg` connection pool.
+- Added database initialization logic to create the `users` table if it does not already exist.
+- Implemented user CRUD routes:
+  - Create a user
+  - Get all users
+  - Get one user by ID
+  - Update a user by ID
+  - Delete a user by ID
+- Added TypeScript build output from `src` to `dist`.
+- Added npm scripts for development, build, and production start.
 
-### Runtime Dependencies
+## Tech Stack
 
-- `express`: Web server framework used to create routes, middleware, and start the HTTP server.
-- `pg`: PostgreSQL client used to create a database connection pool.
+- `Node.js`: JavaScript runtime used to run the server.
+- `Express`: Web framework used for routing, middleware, and HTTP responses.
+- `TypeScript`: Adds static typing and compiles the source code to JavaScript.
+- `PostgreSQL`: Relational database used to store user records.
+- `pg`: PostgreSQL client for Node.js.
+- `dotenv`: Loads environment variables from a `.env` file.
+- `tsx`: Runs TypeScript directly during development with watch mode.
 
-### Development Dependencies
+## Project Structure
 
-- `typescript`: TypeScript compiler.
-- `tsx`: Runs TypeScript files directly during development.
-- `@types/express`: Type definitions for Express.
-- `@types/pg`: Type definitions for `pg`.
-
-## Imports Used In The Server
-
-```ts
-import express, { type Application, type Request, type Response } from 'express'
-import { Pool } from 'pg'
+```txt
+src/
+  config/
+    index.ts      # Loads environment variables and exports app config
+  server.ts       # Express app, database setup, and API routes
+package.json      # Dependencies and npm scripts
+tsconfig.json     # TypeScript compiler configuration
 ```
 
-## Commands Used
+## Environment Variables
 
-Install runtime packages:
+Create a `.env` file in the project root:
 
-```bash
-npm install express pg
+```env
+PORT=5000
+CONNECTION_STRING=postgresql://username:password@localhost:5432/database_name
 ```
 
-Install development packages:
+`PORT` controls the server port. If it is not provided, the server uses `5000`.
+
+`CONNECTION_STRING` is required for connecting to PostgreSQL.
+
+## How To Run The Project
+
+Install dependencies:
 
 ```bash
-npm install --save-dev typescript tsx @types/express @types/pg
+npm install
+```
+
+Create the `.env` file and add your PostgreSQL connection string.
+
+Run the project in development mode:
+
+```bash
+npm run dev
 ```
 
 Build the TypeScript project:
@@ -57,27 +77,34 @@ Build the TypeScript project:
 npm run build
 ```
 
-Start the compiled server:
+Start the compiled production build:
 
 ```bash
 npm start
 ```
 
-Run the server in development mode:
+After the server starts, it will listen on:
 
-```bash
-npm run dev
+```txt
+http://localhost:5000
 ```
+
+If you set a different `PORT`, use that port instead.
 
 ## Available Scripts
 
-- `npm run build`: Compiles TypeScript from `src` into `dist`.
+- `npm run dev`: Runs `src/server.ts` with `tsx watch`.
+- `npm run build`: Compiles TypeScript files into the `dist` folder.
 - `npm start`: Builds the project first, then runs `dist/server.js`.
-- `npm run dev`: Runs `src/server.ts` directly with `tsx watch`.
+- `npm test`: Placeholder script. Tests are not configured yet.
 
-## Current Routes
+## API Routes
 
-### `GET /`
+### Health Route
+
+```http
+GET /
+```
 
 Returns:
 
@@ -85,35 +112,132 @@ Returns:
 Hello World!
 ```
 
-### `POST /`
+### Create User
 
-Accepts a request body with `name` and `age`.
+```http
+POST /api/users
+```
 
-Example JSON body:
+Example body:
 
 ```json
 {
   "name": "John",
+  "email": "john@example.com",
+  "password": "secret123",
   "age": 25
 }
 ```
 
-Example response:
+### Get All Users
+
+```http
+GET /api/users
+```
+
+Returns all users from the database.
+
+### Get User By ID
+
+```http
+GET /api/users/:id
+```
+
+Example:
+
+```http
+GET /api/users/1
+```
+
+Returns one user by ID or `404` if the user does not exist.
+
+### Update User By ID
+
+```http
+PUT /api/users/:id
+```
+
+Example body:
 
 ```json
 {
-  "message": "Data received successfully",
-  "data": {
-    "name": "John",
-    "age": 25
-  }
+  "name": "John Updated",
+  "age": 26
 }
 ```
 
-## Database
+Updates the provided fields and keeps the existing values for missing fields.
 
-The server currently creates a PostgreSQL connection pool using `pg`.
+### Delete User By ID
 
-The database connection string should be moved into an environment variable before this project is shared or deployed, because database URLs usually contain private credentials.
+```http
+DELETE /api/users/:id
+```
 
+Example:
 
+```http
+DELETE /api/users/1
+```
+
+Deletes one user by ID or returns `404` if the user does not exist.
+
+## Database Table
+
+The server creates this table automatically when it starts:
+
+```sql
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(20) NOT NULL,
+  email VARCHAR(20) NOT NULL UNIQUE,
+  password VARCHAR(20) NOT NULL,
+  is_Active BOOLEAN DEFAULT true,
+  age INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## Applied Topics Explained
+
+### Express Server
+
+Express is used to create the HTTP server and define API routes such as `GET`, `POST`, `PUT`, and `DELETE`.
+
+### Middleware
+
+The server uses middleware to parse incoming request bodies:
+
+- `express.json()` parses JSON data.
+- `express.text()` parses plain text data.
+- `express.urlencoded()` parses form data.
+
+### Environment Configuration
+
+The project uses `dotenv` to load values from `.env`. The config file exports `PORT` and `CONNECTION_STRING` so the server code does not need hard-coded database credentials.
+
+### PostgreSQL Connection Pool
+
+The `pg` package creates a `Pool`, which manages database connections efficiently. The server uses this pool to run SQL queries.
+
+### Database Initialization
+
+When the server starts, `initDB()` runs a `CREATE TABLE IF NOT EXISTS` query. This makes sure the `users` table exists before the API is used.
+
+### CRUD Operations
+
+CRUD means Create, Read, Update, and Delete. This project applies CRUD with the `/api/users` routes:
+
+- `POST` creates a user.
+- `GET` reads users.
+- `PUT` updates a user.
+- `DELETE` removes a user.
+
+### Parameterized SQL Queries
+
+The API uses query placeholders like `$1`, `$2`, and `$3`. Values are passed separately to make SQL queries safer and avoid direct string injection.
+
+### TypeScript Build
+
+Source files are written in TypeScript inside `src`. Running `npm run build` compiles them into JavaScript inside `dist`, which is then used by `npm start`.
