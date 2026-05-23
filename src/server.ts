@@ -1,9 +1,19 @@
-import express from 'express'
-const app = express()
+import express, { type Application, type Request, type Response } from 'express'
+const app: Application = express()
 const port = 3000
 
-app.get('/', (req, res) => {
-  res.send('Hello Aziz!')
+app.use(express.json()) // Middleware to parse JSON bodies
+
+app.get('/', (req: Request, res: Response) => {
+  // res.send('Hello World!')
+  res.status(200).json({
+    message: 'Hello World!'
+  })
+})  
+
+app.post('/', async (req: Request, res: Response) => {
+    console.log(req.body);
+
 })
 
 app.listen(port, () => {
