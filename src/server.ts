@@ -1,8 +1,10 @@
 import express, { type Application, type Request, type Response } from 'express'
 import {Pool} from 'pg'
+import config from './config/index.js'
+
 
 const app: Application = express()
-const port = 3000
+const port = config.port || 5000
 
 app.use(express.json()) // Middleware to parse JSON bodies
 app.use(express.text()) // Middleware to parse text bodies
@@ -10,7 +12,7 @@ app.use(express.urlencoded({ extended: true })) // Middleware to parse URL-encod
 
 // Database connection configuration
 const pool = new Pool({
-  connectionString:"postgresql://neondb_owner:npg_6IGdWECxQF4n@ep-tiny-block-al69d9sb-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+  connectionString: config.connectionString
 })
 
 const initDB = async () => {
