@@ -114,7 +114,7 @@ app.put('/api/users/:id', async (req: Request, res: Response) => {
     const { name, email, password, age } = req.body;
     try {
         const result = await pool.query(`
-        UPDATE users SET name = $1, email = $2, password = $3, age = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5 RETURNING *
+        UPDATE users SET name = COALESCE($1, name), email = COALESCE($2, email), password = COALESCE($3, password), age = COALESCE($4, age), updated_at = CURRENT_TIMESTAMP WHERE id = $5 RETURNING *
         `, [name, email, password, age, id]);
         if (result.rows.length === 0) {
             return res.status(404).json({
@@ -133,6 +133,32 @@ app.put('/api/users/:id', async (req: Request, res: Response) => {
         });
     }
 });
+
+// Delete user by id api endpoint Params: id 
+app.delete('/api/users/:id', async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try{
+        const result = await pool.query(`
+        DELETE FROM users WHERE id = $1 RETURNING *
+        `, [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: 'User not found'
+            });
+        }
+        res.status(200).json({
+            message: 'User deleted successfully',
+            data: result.rows[0]
+        });
+
+    }
+    catch(error: any){
+        res.status(500).json({
+            message: error.message,
+            error: error,
+        });
+    }
+})
 
 // Start the server
 app.listen(port, () => {
