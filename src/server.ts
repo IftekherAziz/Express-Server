@@ -41,8 +41,8 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello World!')
 })  
 
-// Endpoint to handle POST requests
-app.post('/', async (req: Request, res: Response) => {
+// Create user api endpoint
+app.post('/api/users', async (req: Request, res: Response) => {
     const {name,email,password,age} = req.body;
     try {
         const result = await pool.query(`
@@ -51,9 +51,54 @@ app.post('/', async (req: Request, res: Response) => {
     )
     console.log(result);
     res.status(201).json({
-        message: 'Data received successfully',
+        message: 'User created successfully',
         data: result.rows[0]
     });
+    } 
+    catch (error: any) {
+        res.status(500).json({
+            message: error.message,
+            error: error,
+        });
+    }
+});
+
+
+// Get all users api endpoint
+app.get('/api/users', async (req: Request, res: Response) => {
+    try {
+        const result = await pool.query(`
+        SELECT * FROM users
+        `)
+        res.status(200).json({
+            message: 'Users retrieved successfully',
+            data: result.rows
+        });
+    } 
+    catch (error: any) {
+        res.status(500).json({
+            message: error.message,
+            error: error,
+        });
+    }
+});
+
+// Get user by id api endpoint Params: id
+app.get('/api/users/:id', async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query(`
+        SELECT * FROM users WHERE id = $1
+        `, [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: 'User not found'
+            });
+        }
+        res.status(200).json({
+            message: 'User retrieved successfully',
+            data: result.rows[0]
+        });
     } 
     catch (error: any) {
         res.status(500).json({
@@ -67,3 +112,4 @@ app.post('/', async (req: Request, res: Response) => {
 app.listen(port, () => {
   console.log(`This app is running on port ${port}`)
 })
+
