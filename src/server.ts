@@ -108,6 +108,32 @@ app.get('/api/users/:id', async (req: Request, res: Response) => {
     }
 });
 
+// Update user by id api endpoint Params: id
+app.put('/api/users/:id', async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { name, email, password, age } = req.body;
+    try {
+        const result = await pool.query(`
+        UPDATE users SET name = $1, email = $2, password = $3, age = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5 RETURNING *
+        `, [name, email, password, age, id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: 'User not found'
+            });
+        }
+        res.status(200).json({
+            message: 'User updated successfully',
+            data: result.rows[0]
+        });
+    } 
+    catch (error: any) {
+        res.status(500).json({
+            message: error.message,
+            error: error,
+        });
+    }
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`This app is running on port ${port}`)
